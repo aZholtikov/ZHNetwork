@@ -13,10 +13,13 @@ void setup()
 {
   Serial.begin(115200);
   myNet.begin(myNetName);
+  myNet.setMaxNumberOfAttempts(5);
   myNet.setOnConfirmReceivingCallback(onConfirmReceiving);
   Serial.println();
   Serial.print("The node is up and running. MAC is ");
-  Serial.println(myNet.getNodeMac());
+  Serial.print(myNet.getNodeMac());
+  Serial.print(". Firmware version is ");
+  Serial.println(myNet.getFirmwareVersion());
 }
 
 void loop()

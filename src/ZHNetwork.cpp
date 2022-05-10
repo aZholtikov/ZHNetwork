@@ -8,12 +8,18 @@ struct TransmittedData
     char message[200]{0};
 };
 
+const byte broadcastMAC[6]{0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
 char netName[10]{0};
 byte localMAC[6]{0};
 uint64_t lastMessageSentTime{0};
 byte maxWaitingTimeBetweenTransmissions{50};
 bool updateMode{false};
 bool confirmReceiving{false};
+bool sentMessageSemaphore{false};
+bool confirmReceivingSemaphore{false};
+byte numberOfAttemptsToSend{1};
+byte maxNumberOfAttempts{3};
+String firmware = "1.1";
 
 std::queue<TransmittedData> queueForOutgoingData;
 std::queue<TransmittedData> queueForIncomingData;
@@ -38,7 +44,7 @@ ZHNetwork &ZHNetwork::setOnConfirmReceivingCallback(onConfirm onConfirmReceiving
 
 void ZHNetwork::begin(const char *name)
 {
-    memcpy(netName, name, sizeof(netName));
+    os_memcpy(netName, name, sizeof(netName));
     WiFi.persistent(false);
     WiFi.setSleep(false);
     WiFi.disconnect();
@@ -52,7 +58,7 @@ void ZHNetwork::begin(const char *name)
 
 bool ZHNetwork::begin(const char *name, const char *ssid, const char *password)
 {
-    memcpy(netName, name, sizeof(netName));
+    os_memcpy(netName, name, sizeof(netName));
     String ssidApNamePrefix = "ESP-NOW GATEWAY ";
     WiFi.persistent(false);
     WiFi.setSleep(false);
@@ -94,6 +100,7 @@ void ZHNetwork::update()
 
 void IRAM_ATTR ZHNetwork::onDataSent(byte *mac, byte status)
 {
+    confirmReceivingSemaphore = true;
     confirmReceiving = status ? false : true;
 }
 
@@ -102,27 +109,27 @@ void IRAM_ATTR ZHNetwork::onDataReceive(byte *mac, byte *data, byte length)
     if (length != sizeof(TransmittedData))
         return;
     TransmittedData incomingData;
-    memcpy(&incomingData, data, sizeof(TransmittedData));
+    os_memcpy(&incomingData, data, sizeof(TransmittedData));
     queueForIncomingData.push(incomingData);
 }
 
 void ZHNetwork::sendBroadcastMessage(const char *data)
 {
     TransmittedData outgoingData;
-    memcpy(outgoingData.netName, netName, sizeof(netName));
-    memcpy(outgoingData.targetMAC, broadcastMAC, 6);
-    memcpy(outgoingData.senderMAC, localMAC, 6);
-    strcpy(outgoingData.message, data);
+    os_memcpy(outgoingData.netName, netName, sizeof(netName));
+    os_memcpy(outgoingData.targetMAC, broadcastMAC, 6);
+    os_memcpy(outgoingData.senderMAC, localMAC, 6);
+    os_strcpy(outgoingData.message, data);
     queueForOutgoingData.push(outgoingData);
 }
 
 void ZHNetwork::sendUnicastMessage(const char *data, const byte *target)
 {
     TransmittedData outgoingData;
-    memcpy(outgoingData.netName, netName, sizeof(netName));
-    memcpy(outgoingData.targetMAC, target, 6);
-    memcpy(outgoingData.senderMAC, localMAC, 6);
-    strcpy(outgoingData.message, data);
+    os_memcpy(outgoingData.netName, netName, sizeof(netName));
+    os_memcpy(outgoingData.targetMAC, target, 6);
+    os_memcpy(outgoingData.senderMAC, localMAC, 6);
+    os_strcpy(outgoingData.message, data);
     queueForOutgoingData.push(outgoingData);
 }
 
@@ -130,15 +137,31 @@ void ZHNetwork::maintenance()
 {
     if (updateMode)
         ArduinoOTA.handle();
-    if (confirmReceiving && onConfirmReceivingCallback)
+    if (sentMessageSemaphore && confirmReceivingSemaphore)
     {
-        confirmReceiving = false;
-        onConfirmReceivingCallback();
+        sentMessageSemaphore = false;
+        confirmReceivingSemaphore = false;
+        if (confirmReceiving)
+        {
+            queueForOutgoingData.pop();
+            if (onConfirmReceivingCallback)
+                onConfirmReceivingCallback();
+        }
+        else
+        {
+            if (numberOfAttemptsToSend < maxNumberOfAttempts)
+                ++numberOfAttemptsToSend;
+            else
+            {
+                queueForOutgoingData.pop();
+                numberOfAttemptsToSend = 1;
+            }
+        }
     }
     if (!queueForOutgoingData.empty() && ((millis() - lastMessageSentTime) > maxWaitingTimeBetweenTransmissions))
     {
         TransmittedData outgoingData = queueForOutgoingData.front();
-        queueForOutgoingData.pop();
+        sentMessageSemaphore = true;
         esp_now_send(outgoingData.targetMAC, (byte *)&outgoingData, sizeof(TransmittedData));
         lastMessageSentTime = millis();
     }
@@ -180,4 +203,17 @@ byte *ZHNetwork::stringToMac(const String &string, byte *mac)
 String ZHNetwork::getNodeMac()
 {
     return macToString(localMAC);
+}
+
+String ZHNetwork::getFirmwareVersion()
+{
+    return firmware;
+}
+
+bool ZHNetwork::setMaxNumberOfAttempts(const byte number)
+{
+    if (number < 1 || number > 10)
+        return false;
+    maxNumberOfAttempts = number;
+    return true;
 }

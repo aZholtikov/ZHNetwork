@@ -7,8 +7,6 @@
 #include "arduino.h"
 #include "queue"
 
-const byte broadcastMAC[6]{0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
-
 typedef std::function<void(const char *, const byte *)> onMessage;
 typedef std::function<void()> onConfirm;
 
@@ -103,7 +101,7 @@ public:
      * @param mac Массив (6 байт), содержащий MAC-адрес.
      *
      */
-    static String macToString(const byte *mac);
+    String macToString(const byte *mac);
 
     /**
      * Преобразование строки из 12 символов в массив (6 байт) MAC-адреса.
@@ -113,6 +111,20 @@ public:
      *
      */
     byte *stringToMac(const String &string, byte *mac);
+
+    /**
+     * Получить версию ПО узла/шлюза ESP-NOW.
+     *
+     * @return Версия ПО.
+     */
+    String getFirmwareVersion(void);
+
+    /**
+     * Установить максимальное количество попыток отправки сообщения (от 1 до 10). Значение по умолчанию - 3.
+     *
+     * @return Истина, если значение установлено.
+     */
+    bool setMaxNumberOfAttempts(const byte number);
 
 private:
     static void onDataSent(byte *mac, byte status);
