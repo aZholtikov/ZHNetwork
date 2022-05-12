@@ -8,21 +8,12 @@ struct TransmittedData
     char message[200]{0};
 };
 
-const byte broadcastMAC[6]{0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
-char netName[10]{0};
-byte localMAC[6]{0};
-uint64_t lastMessageSentTime{0};
-byte maxWaitingTimeBetweenTransmissions{50};
-bool updateMode{false};
-bool confirmReceiving{false};
-bool sentMessageSemaphore{false};
-bool confirmReceivingSemaphore{false};
-byte numberOfAttemptsToSend{1};
-byte maxNumberOfAttempts{3};
-String firmware = "1.1";
-
 std::queue<TransmittedData> queueForOutgoingData;
 std::queue<TransmittedData> queueForIncomingData;
+
+bool sentMessageSemaphore;
+bool confirmReceiving;
+bool confirmReceivingSemaphore;
 
 ZHNetwork &ZHNetwork::setOnBroadcastReceivingCallback(onMessage onBroadcastReceivingCallback)
 {
@@ -215,5 +206,13 @@ bool ZHNetwork::setMaxNumberOfAttempts(const byte number)
     if (number < 1 || number > 10)
         return false;
     maxNumberOfAttempts = number;
+    return true;
+}
+
+bool ZHNetwork::setMaxWaitingTimeBetweenTransmissions(const byte time)
+{
+    if (time < 20 || time > 500)
+        return false;
+    maxWaitingTimeBetweenTransmissions = time;
     return true;
 }

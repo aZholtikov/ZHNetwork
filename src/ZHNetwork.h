@@ -126,7 +126,24 @@ public:
      */
     bool setMaxNumberOfAttempts(const byte number);
 
+    /**
+     * Установить максимальное время ожидания между отправками сообщений (от 20 до 500 миллисекунд). Значение по умолчанию - 50.
+     *
+     * @return Истина, если значение установлено.
+     */
+    bool setMaxWaitingTimeBetweenTransmissions(const byte time);
+
 private:
+    String firmware = "1.2";
+    const byte broadcastMAC[6]{0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
+    char netName[10]{0};
+    byte localMAC[6]{0};
+    uint64_t lastMessageSentTime{0};
+    byte maxWaitingTimeBetweenTransmissions{50};
+    bool updateMode{false};
+    byte maxNumberOfAttempts{3};
+    byte numberOfAttemptsToSend{1};
+
     static void onDataSent(byte *mac, byte status);
     static void onDataReceive(byte *mac, byte *data, byte length);
     onMessage onBroadcastReceivingCallback;

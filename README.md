@@ -18,3 +18,5 @@ API см. в файле ZHNetwork.h
 2. v1.1 Добавлен повтор передачи сообщения (до 10 раз) при неудачной отправке.
     1. Добавлена функция получения версии ПО: String getFirmwareVersion(void).
     2. Добавлена функция установки количества попыток передачи: bool setMaxNumberOfAttempts(const byte number).
+3. v1.2 Устранены незначительные ошибки.
+    1. Добавлена функция установки времени ожидания между отправками сообщений: bool setMaxWaitingTimeBetweenTransmissions(const byte time).
