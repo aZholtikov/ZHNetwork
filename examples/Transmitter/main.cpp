@@ -13,7 +13,8 @@ void setup()
 {
   Serial.begin(115200);
   myNet.begin(myNetName);
-  myNet.setMaxNumberOfAttempts(5);
+  myNet.setMaxNumberOfAttempts(3);                 // Опционально.
+  myNet.setMaxWaitingTimeBetweenTransmissions(50); // Опционально.
   myNet.setOnConfirmReceivingCallback(onConfirmReceiving);
   Serial.println();
   Serial.print("The node is up and running. MAC is ");
