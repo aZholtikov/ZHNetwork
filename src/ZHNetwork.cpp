@@ -211,7 +211,7 @@ bool ZHNetwork::setMaxNumberOfAttempts(const byte number)
 
 bool ZHNetwork::setMaxWaitingTimeBetweenTransmissions(const byte time)
 {
-    if (time < 20 || time > 500)
+    if (time < 20 || time > 250)
         return false;
     maxWaitingTimeBetweenTransmissions = time;
     return true;
