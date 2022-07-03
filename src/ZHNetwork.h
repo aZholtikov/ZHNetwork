@@ -33,6 +33,7 @@ public:
 
     /**
      * Функция обработки подтверждения успешной отправки сообщения.
+     * Внимание! Подтверждение успешной отправки только ближайшему устройству в цепочке (если выполняется пересылка до конечного адресата).
      *
      */
     ZHNetwork &setOnConfirmReceivingCallback(onConfirm onConfirmReceivingCallback);
@@ -40,7 +41,7 @@ public:
     /**
      * Запуск устройства в режиме узла ESP-NOW.
      *
-     * @param name Имя сети ESP-NOW. Максимальная длина - 10 байт.
+     * @param name Имя сети ESP-NOW. Максимальная длина - 20 байт.
      *
      */
     void begin(const char *name);
@@ -49,7 +50,7 @@ public:
      * Запуск устройства в режиме шлюза между ESP-NOW и WiFi. Обновление прошивки через OTA доступно по IP-адресу.
      * Внимание! Для работы в этом режиме WiFi роутер должен быть настроен на канал 1.
      *
-     * @param name Имя сети ESP-NOW. Максимальная длина - 10 байт.
+     * @param name Имя сети ESP-NOW. Максимальная длина - 20 байт.
      * @param ssid Имя WiFi сети.
      * @param password Пароль WiFi сети.
      *
@@ -101,7 +102,7 @@ public:
      * @param mac Массив (6 байт), содержащий MAC-адрес.
      *
      */
-    String macToString(const byte *mac);
+    static String macToString(const byte *mac);
 
     /**
      * Преобразование строки из 12 символов в массив (6 байт) MAC-адреса.
@@ -133,19 +134,27 @@ public:
      */
     bool setMaxWaitingTimeBetweenTransmissions(const byte time);
 
+    /**
+     * Установить максимальное время ожидания получения маршрута до конечного получателя (от 500 до 5000 миллисекунд). Значение по умолчанию - 500.
+     *
+     * @return Истина, если значение установлено.
+     */
+    bool setMaxWaitingTimeForRoutingInfo(const uint16_t time);
+
 private:
-    String firmware = "1.2";
-    const byte broadcastMAC[6]{0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
-    char netName[10]{0};
-    byte localMAC[6]{0};
+    String firmware = "2.0";
     uint64_t lastMessageSentTime{0};
+    uint64_t lastSearchMessageSentTime{0};
     byte maxWaitingTimeBetweenTransmissions{50};
+    uint16_t maxTimeForRoutingInfoWaiting{500};
     bool updateMode{false};
     byte maxNumberOfAttempts{3};
     byte numberOfAttemptsToSend{1};
 
     static void onDataSent(byte *mac, byte status);
     static void onDataReceive(byte *mac, byte *data, byte length);
+    void sendUnicastMessage(const char *data, const byte *target, const byte *sender);
+    void sendSearchMessage(const byte *target);
     onMessage onBroadcastReceivingCallback;
     onMessage onUnicastReceivingCallback;
     onConfirm onConfirmReceivingCallback;

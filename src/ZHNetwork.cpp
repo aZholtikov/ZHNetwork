@@ -2,18 +2,51 @@
 
 struct TransmittedData
 {
-    char netName[10]{0};
-    byte targetMAC[6]{0};
-    byte senderMAC[6]{0};
+    byte messageType{0};
+    uint16_t messageID{0};
+    char netName[20]{0};
+    byte originalTargetMAC[6]{0};
+    byte originalSenderMAC[6]{0};
     char message[200]{0};
 };
 
-std::queue<TransmittedData> queueForOutgoingData;
-std::queue<TransmittedData> queueForIncomingData;
+struct OutgoingData
+{
+    byte intermediateTargetMAC[6]{0};
+    TransmittedData transmittedData;
+};
 
-bool sentMessageSemaphore;
-bool confirmReceiving;
-bool confirmReceivingSemaphore;
+struct IncomingData
+{
+    byte intermediateSenderMAC[6]{0};
+    TransmittedData transmittedData;
+};
+
+struct RoutingTable
+{
+    byte originalTargetMAC[6]{0};
+    byte intermediateTargetMAC[6]{0};
+};
+
+enum MessageType
+{
+    BROADCAST = 1,
+    UNICAST,
+};
+
+std::vector<RoutingTable> routingVector;
+std::queue<OutgoingData> queueForOutgoingData;
+std::queue<OutgoingData> queueForRoutingVectorWaiting;
+std::queue<IncomingData> queueForIncomingData;
+
+const byte broadcastMAC[6]{0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
+char netName[20]{0};
+byte localMAC[6]{0};
+uint16_t lastMessageID[10]{0};
+bool criticalProcessSemaphore{false};
+bool sentMessageSemaphore{false};
+bool confirmReceivingSemaphore{false};
+bool confirmReceiving{false};
 
 ZHNetwork &ZHNetwork::setOnBroadcastReceivingCallback(onMessage onBroadcastReceivingCallback)
 {
@@ -97,31 +130,107 @@ void IRAM_ATTR ZHNetwork::onDataSent(byte *mac, byte status)
 
 void IRAM_ATTR ZHNetwork::onDataReceive(byte *mac, byte *data, byte length)
 {
-    if (length != sizeof(TransmittedData))
+    if (criticalProcessSemaphore)
         return;
-    TransmittedData incomingData;
-    os_memcpy(&incomingData, data, sizeof(TransmittedData));
+    criticalProcessSemaphore = true;
+    if (length != sizeof(TransmittedData))
+    {
+        criticalProcessSemaphore = false;
+        return;
+    }
+    IncomingData incomingData;
+    os_memcpy(&incomingData.transmittedData, data, sizeof(TransmittedData));
+    if (String(incomingData.transmittedData.netName) != String(netName) ||
+        macToString(incomingData.transmittedData.originalSenderMAC) == macToString(localMAC))
+    {
+        criticalProcessSemaphore = false;
+        return;
+    }
+    for (byte i{0}; i < sizeof(lastMessageID) / 2; ++i)
+        if (lastMessageID[i] == incomingData.transmittedData.messageID)
+        {
+            criticalProcessSemaphore = false;
+            return;
+        }
+    for (byte i{sizeof(lastMessageID) / 2 - 1}; i >= 1; --i)
+        lastMessageID[i] = lastMessageID[i - 1];
+    lastMessageID[0] = incomingData.transmittedData.messageID;
+    os_memcpy(incomingData.intermediateSenderMAC, mac, 6);
     queueForIncomingData.push(incomingData);
+    criticalProcessSemaphore = false;
 }
 
 void ZHNetwork::sendBroadcastMessage(const char *data)
 {
-    TransmittedData outgoingData;
-    os_memcpy(outgoingData.netName, netName, sizeof(netName));
-    os_memcpy(outgoingData.targetMAC, broadcastMAC, 6);
-    os_memcpy(outgoingData.senderMAC, localMAC, 6);
-    os_strcpy(outgoingData.message, data);
+    OutgoingData outgoingData;
+    outgoingData.transmittedData.messageType = BROADCAST;
+    outgoingData.transmittedData.messageID = ((uint16_t)ESP.random() << 8) | (uint16_t)ESP.random();
+    os_memcpy(outgoingData.transmittedData.netName, netName, 20);
+    os_memcpy(outgoingData.transmittedData.originalTargetMAC, broadcastMAC, 6);
+    os_memcpy(outgoingData.transmittedData.originalSenderMAC, localMAC, 6);
+    os_strcpy(outgoingData.transmittedData.message, data);
+    os_memcpy(outgoingData.intermediateTargetMAC, broadcastMAC, 6);
     queueForOutgoingData.push(outgoingData);
 }
 
 void ZHNetwork::sendUnicastMessage(const char *data, const byte *target)
 {
-    TransmittedData outgoingData;
-    os_memcpy(outgoingData.netName, netName, sizeof(netName));
-    os_memcpy(outgoingData.targetMAC, target, 6);
-    os_memcpy(outgoingData.senderMAC, localMAC, 6);
-    os_strcpy(outgoingData.message, data);
+    OutgoingData outgoingData;
+    outgoingData.transmittedData.messageType = UNICAST;
+    outgoingData.transmittedData.messageID = ((uint16_t)ESP.random() << 8) | (uint16_t)ESP.random();
+    os_memcpy(outgoingData.transmittedData.netName, netName, 20);
+    os_memcpy(outgoingData.transmittedData.originalTargetMAC, target, 6);
+    os_memcpy(outgoingData.transmittedData.originalSenderMAC, localMAC, 6);
+    os_strcpy(outgoingData.transmittedData.message, data);
+    for (uint16_t i{0}; i < routingVector.size(); ++i)
+    {
+        RoutingTable routingTable = routingVector[i];
+        if (macToString(routingTable.originalTargetMAC) == macToString(target))
+        {
+            os_memcpy(outgoingData.intermediateTargetMAC, routingTable.intermediateTargetMAC, 6);
+            queueForOutgoingData.push(outgoingData);
+            return;
+        }
+    }
+    os_memcpy(outgoingData.intermediateTargetMAC, target, 6);
     queueForOutgoingData.push(outgoingData);
+}
+
+void ZHNetwork::sendUnicastMessage(const char *data, const byte *target, const byte *sender)
+{
+    OutgoingData outgoingData;
+    outgoingData.transmittedData.messageType = UNICAST;
+    outgoingData.transmittedData.messageID = ((uint16_t)ESP.random() << 8) | (uint16_t)ESP.random();
+    os_memcpy(outgoingData.transmittedData.netName, netName, 20);
+    os_memcpy(outgoingData.transmittedData.originalTargetMAC, target, 6);
+    os_memcpy(outgoingData.transmittedData.originalSenderMAC, sender, 6);
+    os_strcpy(outgoingData.transmittedData.message, data);
+    for (uint16_t i{0}; i < routingVector.size(); ++i)
+    {
+        RoutingTable routingTable = routingVector[i];
+        if (macToString(routingTable.originalTargetMAC) == macToString(target))
+        {
+            os_memcpy(outgoingData.intermediateTargetMAC, routingTable.intermediateTargetMAC, 6);
+            queueForOutgoingData.push(outgoingData);
+            return;
+        }
+    }
+    os_memcpy(outgoingData.intermediateTargetMAC, target, 6);
+    queueForOutgoingData.push(outgoingData);
+}
+
+void ZHNetwork::sendSearchMessage(const byte *target)
+{
+    OutgoingData outgoingData;
+    outgoingData.transmittedData.messageType = BROADCAST;
+    outgoingData.transmittedData.messageID = ((uint16_t)ESP.random() << 8) | (uint16_t)ESP.random();
+    os_memcpy(outgoingData.transmittedData.netName, netName, 20);
+    os_memcpy(outgoingData.transmittedData.originalTargetMAC, target, 6);
+    os_memcpy(outgoingData.transmittedData.originalSenderMAC, localMAC, 6);
+    os_strcpy(outgoingData.transmittedData.message, "");
+    os_memcpy(outgoingData.intermediateTargetMAC, broadcastMAC, 6);
+    queueForOutgoingData.push(outgoingData);
+    lastSearchMessageSentTime = millis();
 }
 
 void ZHNetwork::maintenance()
@@ -134,8 +243,9 @@ void ZHNetwork::maintenance()
         confirmReceivingSemaphore = false;
         if (confirmReceiving)
         {
+            OutgoingData outgoingData = queueForOutgoingData.front();
             queueForOutgoingData.pop();
-            if (onConfirmReceivingCallback)
+            if (onConfirmReceivingCallback && macToString(outgoingData.transmittedData.originalSenderMAC) == macToString(localMAC))
                 onConfirmReceivingCallback();
         }
         else
@@ -144,6 +254,20 @@ void ZHNetwork::maintenance()
                 ++numberOfAttemptsToSend;
             else
             {
+                OutgoingData outgoingData = queueForOutgoingData.front();
+                if (outgoingData.transmittedData.messageType == UNICAST)
+                {
+                    for (uint16_t i{0}; i < routingVector.size(); ++i)
+                    {
+                        RoutingTable routingTable = routingVector[i];
+                        if (macToString(routingTable.originalTargetMAC) == macToString(outgoingData.transmittedData.originalTargetMAC))
+                        {
+                            routingVector.erase(routingVector.begin() + i);
+                        }
+                    }
+                    queueForRoutingVectorWaiting.push(outgoingData);
+                    sendSearchMessage(outgoingData.transmittedData.originalTargetMAC);
+                }
                 queueForOutgoingData.pop();
                 numberOfAttemptsToSend = 1;
             }
@@ -151,21 +275,74 @@ void ZHNetwork::maintenance()
     }
     if (!queueForOutgoingData.empty() && ((millis() - lastMessageSentTime) > maxWaitingTimeBetweenTransmissions))
     {
-        TransmittedData outgoingData = queueForOutgoingData.front();
-        sentMessageSemaphore = true;
-        esp_now_send(outgoingData.targetMAC, (byte *)&outgoingData, sizeof(TransmittedData));
+        OutgoingData outgoingData = queueForOutgoingData.front();
+        esp_now_send(outgoingData.intermediateTargetMAC, (byte *)&outgoingData.transmittedData, sizeof(TransmittedData));
         lastMessageSentTime = millis();
+        sentMessageSemaphore = true;
     }
     if (!queueForIncomingData.empty())
     {
-        TransmittedData incomingData = queueForIncomingData.front();
+        criticalProcessSemaphore = true;
+        IncomingData incomingData = queueForIncomingData.front();
         queueForIncomingData.pop();
-        if (String(incomingData.netName) != String(netName))
-            return;
-        if (macToString(incomingData.targetMAC) == macToString(broadcastMAC) && onBroadcastReceivingCallback)
-            onBroadcastReceivingCallback(incomingData.message, incomingData.senderMAC);
-        if (macToString(incomingData.targetMAC) == macToString(localMAC) && onUnicastReceivingCallback)
-            onUnicastReceivingCallback(incomingData.message, incomingData.senderMAC);
+        criticalProcessSemaphore = false;
+        if (incomingData.transmittedData.messageType == BROADCAST)
+        {
+            if (macToString(incomingData.transmittedData.originalTargetMAC) != macToString(localMAC))
+            {
+                OutgoingData outgoingData;
+                os_memcpy(&outgoingData.transmittedData, &incomingData.transmittedData, sizeof(TransmittedData));
+                os_memcpy(outgoingData.intermediateTargetMAC, broadcastMAC, 6);
+                queueForOutgoingData.push(outgoingData);
+            }
+            bool flag{false};
+            for (uint16_t i{0}; i < routingVector.size(); ++i)
+            {
+                RoutingTable routingTable = routingVector[i];
+                if (macToString(routingTable.originalTargetMAC) == macToString(incomingData.transmittedData.originalSenderMAC))
+                {
+                    flag = true;
+                    os_memcpy(routingTable.intermediateTargetMAC, incomingData.intermediateSenderMAC, 6);
+                    routingVector.at(i) = routingTable;
+                }
+            }
+            if (!flag)
+            {
+                RoutingTable routingTable;
+                os_memcpy(routingTable.originalTargetMAC, incomingData.transmittedData.originalSenderMAC, 6);
+                os_memcpy(routingTable.intermediateTargetMAC, incomingData.intermediateSenderMAC, 6);
+                routingVector.push_back(routingTable);
+            }
+            if (macToString(incomingData.transmittedData.originalTargetMAC) == macToString(broadcastMAC) &&
+                int(incomingData.transmittedData.message[0]) && onBroadcastReceivingCallback)
+                onBroadcastReceivingCallback(incomingData.transmittedData.message, incomingData.transmittedData.originalSenderMAC);
+            if (macToString(incomingData.transmittedData.originalTargetMAC) == macToString(localMAC))
+                sendBroadcastMessage("");
+        }
+        if (incomingData.transmittedData.messageType == UNICAST)
+        {
+            if (macToString(incomingData.transmittedData.originalTargetMAC) == macToString(localMAC) && onUnicastReceivingCallback)
+                onUnicastReceivingCallback(incomingData.transmittedData.message, incomingData.transmittedData.originalSenderMAC);
+            else
+                sendUnicastMessage(incomingData.transmittedData.message, incomingData.transmittedData.originalTargetMAC, incomingData.transmittedData.originalSenderMAC);
+        }
+    }
+    if (!queueForRoutingVectorWaiting.empty())
+    {
+        OutgoingData outgoingData = queueForRoutingVectorWaiting.front();
+        for (uint16_t i{0}; i < routingVector.size(); ++i)
+        {
+            RoutingTable routingTable = routingVector[i];
+            if (macToString(routingTable.originalTargetMAC) == macToString(outgoingData.transmittedData.originalTargetMAC))
+            {
+                queueForRoutingVectorWaiting.pop();
+                os_memcpy(outgoingData.intermediateTargetMAC, routingTable.intermediateTargetMAC, 6);
+                queueForOutgoingData.push(outgoingData);
+                return;
+            }
+        }
+        if ((millis() - lastSearchMessageSentTime) > maxTimeForRoutingInfoWaiting)
+            queueForRoutingVectorWaiting.pop();
     }
 }
 
@@ -214,5 +391,13 @@ bool ZHNetwork::setMaxWaitingTimeBetweenTransmissions(const byte time)
     if (time < 20 || time > 250)
         return false;
     maxWaitingTimeBetweenTransmissions = time;
+    return true;
+}
+
+bool ZHNetwork::setMaxWaitingTimeForRoutingInfo(const uint16_t time)
+{
+    if (time < 500 || time > 5000)
+        return false;
+    maxTimeForRoutingInfoWaiting = time;
     return true;
 }

@@ -13,6 +13,7 @@ void setup()
   myNet.begin(myNetName);
   myNet.setMaxNumberOfAttempts(3);                 // Опционально.
   myNet.setMaxWaitingTimeBetweenTransmissions(50); // Опционально.
+  myNet.setMaxWaitingTimeForRoutingInfo(500);      // Опционально.
   myNet.setOnBroadcastReceivingCallback(onBroadcastReceiving);
   myNet.setOnUnicastReceivingCallback(onUnicastReceiving);
   Serial.println();
