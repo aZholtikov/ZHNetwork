@@ -113,6 +113,8 @@ void ZHNetwork::update()
     esp_now_unregister_recv_cb();
     esp_now_unregister_send_cb();
     esp_now_deinit();
+    WiFi.persistent(false);
+    WiFi.setSleep(false);
     WiFi.disconnect();
     WiFi.mode(WIFI_AP);
     WiFi.softAPConfig(apIP, apIP, IPAddress(255, 255, 255, 0));
@@ -245,7 +247,8 @@ void ZHNetwork::maintenance()
         {
             OutgoingData outgoingData = queueForOutgoingData.front();
             queueForOutgoingData.pop();
-            if (onConfirmReceivingCallback && macToString(outgoingData.transmittedData.originalSenderMAC) == macToString(localMAC))
+            if (onConfirmReceivingCallback && macToString(outgoingData.transmittedData.originalSenderMAC) == macToString(localMAC) &&
+                int(outgoingData.transmittedData.message[0]))
                 onConfirmReceivingCallback();
         }
         else
