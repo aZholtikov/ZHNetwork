@@ -83,6 +83,7 @@ void ZHNetwork::begin(const char *name)
 
 bool ZHNetwork::begin(const char *name, const char *ssid, const char *password)
 {
+    randomSeed(analogRead(0));
     os_memcpy(netName, name, sizeof(netName));
     String ssidApNamePrefix = "ESP-NOW GATEWAY ";
     WiFi.persistent(false);
