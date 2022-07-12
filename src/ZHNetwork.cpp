@@ -68,6 +68,7 @@ ZHNetwork &ZHNetwork::setOnConfirmReceivingCallback(onConfirm onConfirmReceiving
 
 void ZHNetwork::begin(const char *name)
 {
+    randomSeed(analogRead(0));
     os_memcpy(netName, name, sizeof(netName));
     WiFi.persistent(false);
     WiFi.setSleep(false);
@@ -276,7 +277,7 @@ void ZHNetwork::maintenance()
             }
         }
     }
-    if (!queueForOutgoingData.empty() && ((millis() - lastMessageSentTime) > maxWaitingTimeBetweenTransmissions))
+    if (!queueForOutgoingData.empty() && ((millis() - lastMessageSentTime) > (maxWaitingTimeBetweenTransmissions + random(20))))
     {
         OutgoingData outgoingData = queueForOutgoingData.front();
         esp_now_send(outgoingData.intermediateTargetMAC, (byte *)&outgoingData.transmittedData, sizeof(TransmittedData));
