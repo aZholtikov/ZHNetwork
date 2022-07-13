@@ -143,7 +143,7 @@ public:
     bool setMaxWaitingTimeForRoutingInfo(const uint16_t time);
 
 private:
-    const String firmware = "2.0";
+    const String firmware = "2.1";
     uint64_t lastMessageSentTime{0};
     uint64_t lastSearchMessageSentTime{0};
     byte maxWaitingTimeBetweenTransmissions{50};

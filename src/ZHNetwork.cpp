@@ -300,23 +300,26 @@ void ZHNetwork::maintenance()
                 os_memcpy(outgoingData.intermediateTargetMAC, broadcastMAC, 6);
                 queueForOutgoingData.push(outgoingData);
             }
-            bool flag{false};
-            for (uint16_t i{0}; i < routingVector.size(); ++i)
+            if (!int(incomingData.transmittedData.message[0]))
             {
-                RoutingTable routingTable = routingVector[i];
-                if (macToString(routingTable.originalTargetMAC) == macToString(incomingData.transmittedData.originalSenderMAC))
+                bool flag{false};
+                for (uint16_t i{0}; i < routingVector.size(); ++i)
                 {
-                    flag = true;
-                    os_memcpy(routingTable.intermediateTargetMAC, incomingData.intermediateSenderMAC, 6);
-                    routingVector.at(i) = routingTable;
+                    RoutingTable routingTable = routingVector[i];
+                    if (macToString(routingTable.originalTargetMAC) == macToString(incomingData.transmittedData.originalSenderMAC))
+                    {
+                        flag = true;
+                        os_memcpy(routingTable.intermediateTargetMAC, incomingData.intermediateSenderMAC, 6);
+                        routingVector.at(i) = routingTable;
+                    }
                 }
-            }
-            if (!flag)
-            {
-                RoutingTable routingTable;
-                os_memcpy(routingTable.originalTargetMAC, incomingData.transmittedData.originalSenderMAC, 6);
-                os_memcpy(routingTable.intermediateTargetMAC, incomingData.intermediateSenderMAC, 6);
-                routingVector.push_back(routingTable);
+                if (!flag)
+                {
+                    RoutingTable routingTable;
+                    os_memcpy(routingTable.originalTargetMAC, incomingData.transmittedData.originalSenderMAC, 6);
+                    os_memcpy(routingTable.intermediateTargetMAC, incomingData.intermediateSenderMAC, 6);
+                    routingVector.push_back(routingTable);
+                }
             }
             if (macToString(incomingData.transmittedData.originalTargetMAC) == macToString(broadcastMAC) &&
                 int(incomingData.transmittedData.message[0]) && onBroadcastReceivingCallback)
