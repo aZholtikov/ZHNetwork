@@ -129,7 +129,6 @@ public:
 
     /**
      * Установить максимальное время ожидания между отправками сообщений (от 20 до 250 миллисекунд). Значение по умолчанию - 50.
-     * К этому времени при каждой передаче прибавляется случайное число в диапазоне от 1 до 20 миллисекунд для предотвращения вызывающего переполнение памяти и перезагрузки "шторма".
      *
      * @return Истина, если значение установлено.
      */
@@ -143,7 +142,7 @@ public:
     bool setMaxWaitingTimeForRoutingInfo(const uint16_t time);
 
 private:
-    const String firmware = "2.1";
+    const String firmware = "2.2";
     uint64_t lastMessageSentTime{0};
     uint64_t lastSearchMessageSentTime{0};
     byte maxWaitingTimeBetweenTransmissions{50};

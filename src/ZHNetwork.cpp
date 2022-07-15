@@ -278,7 +278,7 @@ void ZHNetwork::maintenance()
             }
         }
     }
-    if (!queueForOutgoingData.empty() && ((millis() - lastMessageSentTime) > (maxWaitingTimeBetweenTransmissions + byte(random(20)))))
+    if (!queueForOutgoingData.empty() && ((millis() - lastMessageSentTime) > byte(random(20, maxWaitingTimeBetweenTransmissions))))
     {
         OutgoingData outgoingData = queueForOutgoingData.front();
         esp_now_send(outgoingData.intermediateTargetMAC, (byte *)&outgoingData.transmittedData, sizeof(TransmittedData));
