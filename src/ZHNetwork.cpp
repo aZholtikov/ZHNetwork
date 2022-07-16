@@ -68,7 +68,6 @@ ZHNetwork &ZHNetwork::setOnConfirmReceivingCallback(onConfirm onConfirmReceiving
 
 void ZHNetwork::begin(const char *name)
 {
-    randomSeed(analogRead(0));
     os_memcpy(netName, name, sizeof(netName));
     WiFi.persistent(false);
     WiFi.setSleep(false);
@@ -83,7 +82,6 @@ void ZHNetwork::begin(const char *name)
 
 bool ZHNetwork::begin(const char *name, const char *ssid, const char *password)
 {
-    randomSeed(analogRead(0));
     os_memcpy(netName, name, sizeof(netName));
     String ssidApNamePrefix = "ESP-NOW GATEWAY ";
     WiFi.persistent(false);
@@ -278,7 +276,7 @@ void ZHNetwork::maintenance()
             }
         }
     }
-    if (!queueForOutgoingData.empty() && ((millis() - lastMessageSentTime) > byte(random(20, maxWaitingTimeBetweenTransmissions))))
+    if (!queueForOutgoingData.empty() && ((millis() - lastMessageSentTime) > maxWaitingTimeBetweenTransmissions))
     {
         OutgoingData outgoingData = queueForOutgoingData.front();
         esp_now_send(outgoingData.intermediateTargetMAC, (byte *)&outgoingData.transmittedData, sizeof(TransmittedData));
@@ -299,6 +297,7 @@ void ZHNetwork::maintenance()
                 os_memcpy(&outgoingData.transmittedData, &incomingData.transmittedData, sizeof(TransmittedData));
                 os_memcpy(outgoingData.intermediateTargetMAC, broadcastMAC, 6);
                 queueForOutgoingData.push(outgoingData);
+                lastMessageSentTime = millis() + abs(((int8_t)ESP.random()));
             }
             if (!int(incomingData.transmittedData.message[0]))
             {
