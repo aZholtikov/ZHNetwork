@@ -24,8 +24,6 @@ A simple library for creating ESP-NOW based Mesh network for ESP8266/ESP32.
 
 ## Function descriptions
 
-For more details and correctly using see [examples](https://github.com/aZholtikov/ZHNetwork/tree/master/examples).
-
 ### Sets the callback function for processing a received broadcast message
 
 Note. Possibility uses one callback function for recieved unicast and broadcast messages.
