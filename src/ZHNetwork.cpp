@@ -5,7 +5,7 @@ incoming_queue_t queueForIncomingData;
 outgoing_queue_t queueForOutgoingData;
 waiting_queue_t queueForRoutingVectorWaiting;
 
-const char *firmware PROGMEM{"1.0"};
+const char *firmware PROGMEM{"1.01"};
 const uint8_t broadcastMAC[6]{0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
 
 bool criticalProcessSemaphore{false};
