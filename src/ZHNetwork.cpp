@@ -5,7 +5,7 @@ incoming_queue_t queueForIncomingData;
 outgoing_queue_t queueForOutgoingData;
 waiting_queue_t queueForRoutingVectorWaiting;
 
-const String firmware{"1.0"};
+const char *firmware PROGMEM{"1.0"};
 const uint8_t broadcastMAC[6]{0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
 
 bool criticalProcessSemaphore{false};
@@ -154,7 +154,7 @@ void ZHNetwork::maintenance()
         if (confirmReceiving)
         {
 #ifdef PRINT_LOG
-            Serial.println("OK.");
+            Serial.println(F("OK."));
 #endif
             outgoing_data_t outgoingData = queueForOutgoingData.front();
             queueForOutgoingData.pop();
@@ -167,7 +167,7 @@ void ZHNetwork::maintenance()
         else
         {
 #ifdef PRINT_LOG
-            Serial.println("FAULT.");
+            Serial.println(F("FAULT."));
 #endif
             if (numberOfAttemptsToSend < maxNumberOfAttempts_)
                 ++numberOfAttemptsToSend;
@@ -186,9 +186,9 @@ void ZHNetwork::maintenance()
                     {
                         routingVector.erase(routingVector.begin() + i);
 #ifdef PRINT_LOG
-                        Serial.print("CHECKING ROUTING TABLE... Routing to MAC ");
+                        Serial.print(F("CHECKING ROUTING TABLE... Routing to MAC "));
                         Serial.print(macToString(outgoingData.transmittedData.originalTargetMAC));
-                        Serial.println(" deleted.");
+                        Serial.println(F(" deleted."));
 #endif
                     }
                 }
@@ -220,33 +220,33 @@ void ZHNetwork::maintenance()
         switch (outgoingData.transmittedData.messageType)
         {
         case BROADCAST:
-            Serial.print("BROADCAST");
+            Serial.print(F("BROADCAST"));
             break;
         case UNICAST:
-            Serial.print("UNICAST");
+            Serial.print(F("UNICAST"));
             break;
         case UNICAST_WITH_CONFIRM:
-            Serial.print("UNICAST_WITH_CONFIRM");
+            Serial.print(F("UNICAST_WITH_CONFIRM"));
             break;
         case DELIVERY_CONFIRM_RESPONSE:
-            Serial.print("DELIVERY_CONFIRM_RESPONSE");
+            Serial.print(F("DELIVERY_CONFIRM_RESPONSE"));
             break;
         case SEARCH_REQUEST:
-            Serial.print("SEARCH_REQUEST");
+            Serial.print(F("SEARCH_REQUEST"));
             break;
         case SEARCH_RESPONSE:
-            Serial.print("SEARCH_RESPONSE");
+            Serial.print(F("SEARCH_RESPONSE"));
             break;
         default:
             break;
         }
-        Serial.print(" message from MAC ");
+        Serial.print(F(" message from MAC "));
         Serial.print(macToString(outgoingData.transmittedData.originalSenderMAC));
-        Serial.print(" to MAC ");
+        Serial.print(F(" to MAC "));
         Serial.print(macToString(outgoingData.transmittedData.originalTargetMAC));
-        Serial.print(" via MAC ");
+        Serial.print(F(" via MAC "));
         Serial.print(macToString(outgoingData.intermediateTargetMAC));
-        Serial.print(" sended. Status ");
+        Serial.print(F(" sended. Status "));
 #endif
     }
     if (!queueForIncomingData.empty())
@@ -261,9 +261,9 @@ void ZHNetwork::maintenance()
         {
         case BROADCAST:
 #ifdef PRINT_LOG
-            Serial.print("BROADCAST message from MAC ");
+            Serial.print(F("BROADCAST message from MAC "));
             Serial.print(macToString(incomingData.transmittedData.originalSenderMAC));
-            Serial.println(" received.");
+            Serial.println(F(" received."));
 #endif
             if (onBroadcastReceivingCallback)
                 onBroadcastReceivingCallback(incomingData.transmittedData.message, incomingData.transmittedData.originalSenderMAC);
@@ -271,13 +271,13 @@ void ZHNetwork::maintenance()
             break;
         case UNICAST:
 #ifdef PRINT_LOG
-            Serial.print("UNICAST message from MAC ");
+            Serial.print(F("UNICAST message from MAC "));
             Serial.print(macToString(incomingData.transmittedData.originalSenderMAC));
-            Serial.print(" to MAC ");
+            Serial.print(F(" to MAC "));
             Serial.print(macToString(incomingData.transmittedData.originalTargetMAC));
-            Serial.print(" via MAC ");
+            Serial.print(F(" via MAC "));
             Serial.print(macToString(incomingData.intermediateSenderMAC));
-            Serial.println(" received.");
+            Serial.println(F(" received."));
 #endif
             if (macToString(incomingData.transmittedData.originalTargetMAC) == macToString(localMAC))
             {
@@ -289,13 +289,13 @@ void ZHNetwork::maintenance()
             break;
         case UNICAST_WITH_CONFIRM:
 #ifdef PRINT_LOG
-            Serial.print("UNICAST_WITH_CONFIRM message from MAC ");
+            Serial.print(F("UNICAST_WITH_CONFIRM message from MAC "));
             Serial.print(macToString(incomingData.transmittedData.originalSenderMAC));
-            Serial.print(" to MAC ");
+            Serial.print(F(" to MAC "));
             Serial.print(macToString(incomingData.transmittedData.originalTargetMAC));
-            Serial.print(" via MAC ");
+            Serial.print(F(" via MAC "));
             Serial.print(macToString(incomingData.intermediateSenderMAC));
-            Serial.println(" received.");
+            Serial.println(F(" received."));
 #endif
             if (macToString(incomingData.transmittedData.originalTargetMAC) == macToString(localMAC))
             {
@@ -308,13 +308,13 @@ void ZHNetwork::maintenance()
             break;
         case DELIVERY_CONFIRM_RESPONSE:
 #ifdef PRINT_LOG
-            Serial.print("DELIVERY_CONFIRM_RESPONSE message from MAC ");
+            Serial.print(F("DELIVERY_CONFIRM_RESPONSE message from MAC "));
             Serial.print(macToString(incomingData.transmittedData.originalSenderMAC));
-            Serial.print(" to MAC ");
+            Serial.print(F(" to MAC "));
             Serial.print(macToString(incomingData.transmittedData.originalTargetMAC));
-            Serial.print(" via MAC ");
+            Serial.print(F(" via MAC "));
             Serial.print(macToString(incomingData.intermediateSenderMAC));
-            Serial.println(" received.");
+            Serial.println(F(" received."));
 #endif
             if (macToString(incomingData.transmittedData.originalTargetMAC) == macToString(localMAC))
             {
@@ -326,11 +326,11 @@ void ZHNetwork::maintenance()
             break;
         case SEARCH_REQUEST:
 #ifdef PRINT_LOG
-            Serial.print("SEARCH_REQUEST message from MAC ");
+            Serial.print(F("SEARCH_REQUEST message from MAC "));
             Serial.print(macToString(incomingData.transmittedData.originalSenderMAC));
-            Serial.print(" to MAC ");
+            Serial.print(F(" to MAC "));
             Serial.print(macToString(incomingData.transmittedData.originalTargetMAC));
-            Serial.println(" received.");
+            Serial.println(F(" received."));
 #endif
             if (macToString(incomingData.transmittedData.originalTargetMAC) == macToString(localMAC))
                 broadcastMessage("", incomingData.transmittedData.originalSenderMAC, SEARCH_RESPONSE);
@@ -340,11 +340,11 @@ void ZHNetwork::maintenance()
             break;
         case SEARCH_RESPONSE:
 #ifdef PRINT_LOG
-            Serial.print("SEARCH_RESPONSE message from MAC ");
+            Serial.print(F("SEARCH_RESPONSE message from MAC "));
             Serial.print(macToString(incomingData.transmittedData.originalSenderMAC));
-            Serial.print(" to MAC ");
+            Serial.print(F(" to MAC "));
             Serial.print(macToString(incomingData.transmittedData.originalTargetMAC));
-            Serial.println(" received.");
+            Serial.println(F(" received."));
 #endif
             if (macToString(incomingData.transmittedData.originalTargetMAC) != macToString(localMAC))
                 forward = true;
@@ -375,11 +375,11 @@ void ZHNetwork::maintenance()
                         memcpy(&routingTable.intermediateTargetMAC, &incomingData.intermediateSenderMAC, 6);
                         routingVector.at(i) = routingTable;
 #ifdef PRINT_LOG
-                        Serial.print("CHECKING ROUTING TABLE... Routing to MAC ");
+                        Serial.print(F("CHECKING ROUTING TABLE... Routing to MAC "));
                         Serial.print(macToString(incomingData.transmittedData.originalSenderMAC));
-                        Serial.print(" updated. Target is ");
+                        Serial.print(F(" updated. Target is "));
                         Serial.print(macToString(incomingData.intermediateSenderMAC));
-                        Serial.println(".");
+                        Serial.println(F("."));
 #endif
                     }
                 }
@@ -393,11 +393,11 @@ void ZHNetwork::maintenance()
                     memcpy(&routingTable.intermediateTargetMAC, &incomingData.intermediateSenderMAC, 6);
                     routingVector.push_back(routingTable);
 #ifdef PRINT_LOG
-                    Serial.print("CHECKING ROUTING TABLE... Routing to MAC ");
+                    Serial.print(F("CHECKING ROUTING TABLE... Routing to MAC "));
                     Serial.print(macToString(incomingData.transmittedData.originalSenderMAC));
-                    Serial.print(" added. Target is ");
+                    Serial.print(F(" added. Target is "));
                     Serial.print(macToString(incomingData.intermediateSenderMAC));
-                    Serial.println(".");
+                    Serial.println(F("."));
 #endif
                 }
             }
@@ -418,11 +418,11 @@ void ZHNetwork::maintenance()
                 memcpy(&outgoingData.intermediateTargetMAC, &routingTable.intermediateTargetMAC, 6);
                 queueForOutgoingData.push(outgoingData);
 #ifdef PRINT_LOG
-                Serial.print("CHECKING ROUTING TABLE... Routing to MAC ");
+                Serial.print(F("CHECKING ROUTING TABLE... Routing to MAC "));
                 Serial.print(macToString(outgoingData.transmittedData.originalTargetMAC));
-                Serial.print(" found. Target is ");
+                Serial.print(F(" found. Target is "));
                 Serial.print(macToString(outgoingData.intermediateTargetMAC));
-                Serial.println(".");
+                Serial.println(F("."));
 #endif
                 return;
             }
@@ -431,30 +431,30 @@ void ZHNetwork::maintenance()
         {
             queueForRoutingVectorWaiting.pop();
 #ifdef PRINT_LOG
-            Serial.print("CHECKING ROUTING TABLE... Routing to MAC ");
+            Serial.print(F("CHECKING ROUTING TABLE... Routing to MAC "));
             Serial.print(macToString(waitingData.transmittedData.originalTargetMAC));
-            Serial.println(" not found.");
+            Serial.println(F(" not found."));
             switch (waitingData.transmittedData.messageType)
             {
             case UNICAST:
-                Serial.print("UNICAST");
+                Serial.print(F("UNICAST"));
                 break;
             case UNICAST_WITH_CONFIRM:
-                Serial.print("UNICAST_WITH_CONFIRM");
+                Serial.print(F("UNICAST_WITH_CONFIRM"));
                 break;
             case DELIVERY_CONFIRM_RESPONSE:
-                Serial.print("DELIVERY_CONFIRM_RESPONSE");
+                Serial.print(F("DELIVERY_CONFIRM_RESPONSE"));
                 break;
             default:
                 break;
             }
-            Serial.print(" message from MAC ");
+            Serial.print(F(" message from MAC "));
             Serial.print(macToString(waitingData.transmittedData.originalSenderMAC));
-            Serial.print(" to MAC ");
+            Serial.print(F(" to MAC "));
             Serial.print(macToString(waitingData.transmittedData.originalTargetMAC));
-            Serial.print(" via MAC ");
+            Serial.print(F(" via MAC "));
             Serial.print(macToString(waitingData.intermediateTargetMAC));
-            Serial.println(" undelivered.");
+            Serial.println(F(" undelivered."));
 #endif
             if (waitingData.transmittedData.messageType == UNICAST_WITH_CONFIRM && macToString(waitingData.transmittedData.originalSenderMAC) == macToString(localMAC))
                 if (onConfirmReceivingCallback)
@@ -614,22 +614,22 @@ void ZHNetwork::broadcastMessage(const char *data, const uint8_t *target, messag
     switch (outgoingData.transmittedData.messageType)
     {
     case BROADCAST:
-        Serial.print("BROADCAST");
+        Serial.print(F("BROADCAST"));
         break;
     case SEARCH_REQUEST:
-        Serial.print("SEARCH_REQUEST");
+        Serial.print(F("SEARCH_REQUEST"));
         break;
     case SEARCH_RESPONSE:
-        Serial.print("SEARCH_RESPONSE");
+        Serial.print(F("SEARCH_RESPONSE"));
         break;
     default:
         break;
     }
-    Serial.print(" message from MAC ");
+    Serial.print(F(" message from MAC "));
     Serial.print(macToString(outgoingData.transmittedData.originalSenderMAC));
-    Serial.print(" to MAC ");
+    Serial.print(F(" to MAC "));
     Serial.print(macToString(outgoingData.transmittedData.originalTargetMAC));
-    Serial.println(" added to queue.");
+    Serial.println(F(" added to queue."));
 #endif
 }
 
@@ -651,32 +651,32 @@ void ZHNetwork::unicastMessage(const char *data, const uint8_t *target, const ui
             memcpy(&outgoingData.intermediateTargetMAC, &routingTable.intermediateTargetMAC, 6);
             queueForOutgoingData.push(outgoingData);
 #ifdef PRINT_LOG
-            Serial.print("CHECKING ROUTING TABLE... Routing to MAC ");
+            Serial.print(F("CHECKING ROUTING TABLE... Routing to MAC "));
             Serial.print(macToString(outgoingData.transmittedData.originalTargetMAC));
-            Serial.print(" found. Target is ");
+            Serial.print(F(" found. Target is "));
             Serial.print(macToString(outgoingData.intermediateTargetMAC));
-            Serial.println(".");
+            Serial.println(F("."));
             switch (outgoingData.transmittedData.messageType)
             {
             case UNICAST:
-                Serial.print("UNICAST");
+                Serial.print(F("UNICAST"));
                 break;
             case UNICAST_WITH_CONFIRM:
-                Serial.print("UNICAST_WITH_CONFIRM");
+                Serial.print(F("UNICAST_WITH_CONFIRM"));
                 break;
             case DELIVERY_CONFIRM_RESPONSE:
-                Serial.print("DELIVERY_CONFIRM_RESPONSE");
+                Serial.print(F("DELIVERY_CONFIRM_RESPONSE"));
                 break;
             default:
                 break;
             }
-            Serial.print(" message from MAC ");
+            Serial.print(F(" message from MAC "));
             Serial.print(macToString(outgoingData.transmittedData.originalSenderMAC));
-            Serial.print(" to MAC ");
+            Serial.print(F(" to MAC "));
             Serial.print(macToString(outgoingData.transmittedData.originalTargetMAC));
-            Serial.print(" via MAC ");
+            Serial.print(F(" via MAC "));
             Serial.print(macToString(outgoingData.intermediateTargetMAC));
-            Serial.println(" added to queue.");
+            Serial.println(F(" added to queue."));
 #endif
             return;
         }
@@ -684,31 +684,31 @@ void ZHNetwork::unicastMessage(const char *data, const uint8_t *target, const ui
     memcpy(&outgoingData.intermediateTargetMAC, target, 6);
     queueForOutgoingData.push(outgoingData);
 #ifdef PRINT_LOG
-    Serial.print("CHECKING ROUTING TABLE... Routing to MAC ");
+    Serial.print(F("CHECKING ROUTING TABLE... Routing to MAC "));
     Serial.print(macToString(outgoingData.transmittedData.originalTargetMAC));
-    Serial.print(" not found. Target is ");
+    Serial.print(F(" not found. Target is "));
     Serial.print(macToString(outgoingData.intermediateTargetMAC));
-    Serial.println(".");
+    Serial.println(F("."));
     switch (outgoingData.transmittedData.messageType)
     {
     case UNICAST:
-        Serial.print("UNICAST");
+        Serial.print(F("UNICAST"));
         break;
     case UNICAST_WITH_CONFIRM:
-        Serial.print("UNICAST_WITH_CONFIRM");
+        Serial.print(F("UNICAST_WITH_CONFIRM"));
         break;
     case DELIVERY_CONFIRM_RESPONSE:
-        Serial.print("DELIVERY_CONFIRM_RESPONSE");
+        Serial.print(F("DELIVERY_CONFIRM_RESPONSE"));
         break;
     default:
         break;
     }
-    Serial.print(" message from MAC ");
+    Serial.print(F(" message from MAC "));
     Serial.print(macToString(outgoingData.transmittedData.originalSenderMAC));
-    Serial.print(" to MAC ");
+    Serial.print(F(" to MAC "));
     Serial.print(macToString(outgoingData.transmittedData.originalTargetMAC));
-    Serial.print(" via MAC ");
+    Serial.print(F(" via MAC "));
     Serial.print(macToString(outgoingData.intermediateTargetMAC));
-    Serial.println(" added to queue.");
+    Serial.println(F(" added to queue."));
 #endif
 }
