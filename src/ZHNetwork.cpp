@@ -5,7 +5,7 @@ incoming_queue_t queueForIncomingData;
 outgoing_queue_t queueForOutgoingData;
 waiting_queue_t queueForRoutingVectorWaiting;
 
-const char *firmware PROGMEM{"1.02"};
+const char *firmware PROGMEM{"1.1"};
 const uint8_t broadcastMAC[6]{0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
 
 bool criticalProcessSemaphore{false};
@@ -127,6 +127,15 @@ error_code_t ZHNetwork::begin()
 #endif
     esp_now_register_send_cb(onDataSent);
     esp_now_register_recv_cb(onDataReceive);
+    return SUCCESS;
+}
+
+error_code_t stop()
+{
+    WiFi.mode(WIFI_OFF);
+    esp_now_deinit();
+    esp_now_unregister_recv_cb();
+    esp_now_unregister_send_cb();
     return SUCCESS;
 }
 

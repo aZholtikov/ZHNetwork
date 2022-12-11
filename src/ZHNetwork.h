@@ -97,6 +97,7 @@ public:
     error_code_t setApSetting(const char *ssid, const char *password);
 
     error_code_t begin(void);
+    error_code_t stop(void);
 
     void sendBroadcastMessage(const char *data);
     void sendUnicastMessage(const char *data, const uint8_t *target, const bool confirm = false);

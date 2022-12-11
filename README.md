@@ -116,6 +116,12 @@ myNet.setApSetting("SSID", "PASSWORD");
 myNet.begin();
 ```
 
+### ESP-NOW Mesh network deinitialization
+
+```cpp
+myNet.stop();
+```
+
 ### Sends broadcast message to all nodes
 
 ```cpp
