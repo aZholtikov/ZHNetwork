@@ -15,46 +15,39 @@
 
 // #define PRINT_LOG // Uncomment to display to serial port the full operation log.
 
-#if defined(ESP8266)
-#define esp_memset memset // Just for remove the compiler notice for ESP8266 at "memset". I don't know why this is happening...
-#endif
-#if defined(ESP32)
-#define esp_memset memset
-#endif
-
 typedef struct
 {
-    uint8_t messageType;
-    uint16_t messageID;
-    char netName[20];
-    uint8_t originalTargetMAC[6];
-    uint8_t originalSenderMAC[6];
-    char message[200];
+    uint8_t messageType{0};
+    uint16_t messageID{0};
+    char netName[20]{0};
+    uint8_t originalTargetMAC[6]{0};
+    uint8_t originalSenderMAC[6]{0};
+    char message[200]{0};
 } transmitted_data_t;
 
 typedef struct
 {
-    uint8_t intermediateTargetMAC[6];
+    uint8_t intermediateTargetMAC[6]{0};
     transmitted_data_t transmittedData;
 } outgoing_data_t;
 
 typedef struct
 {
-    uint8_t intermediateSenderMAC[6];
+    uint8_t intermediateSenderMAC[6]{0};
     transmitted_data_t transmittedData;
 } incoming_data_t;
 
 typedef struct
 {
-    uint64_t time;
-    uint8_t intermediateTargetMAC[6];
+    uint64_t time{0};
+    uint8_t intermediateTargetMAC[6]{0};
     transmitted_data_t transmittedData;
 } waiting_data_t;
 
 typedef struct
 {
-    uint8_t originalTargetMAC[6];
-    uint8_t intermediateTargetMAC[6];
+    uint8_t originalTargetMAC[6]{0};
+    uint8_t intermediateTargetMAC[6]{0};
 } routing_table_t;
 
 typedef enum

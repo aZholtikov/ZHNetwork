@@ -5,7 +5,7 @@ incoming_queue_t queueForIncomingData;
 outgoing_queue_t queueForOutgoingData;
 waiting_queue_t queueForRoutingVectorWaiting;
 
-const char *firmware PROGMEM{"1.01"};
+const char *firmware PROGMEM{"1.02"};
 const uint8_t broadcastMAC[6]{0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
 
 bool criticalProcessSemaphore{false};
@@ -62,23 +62,20 @@ error_code_t ZHNetwork::setNetName(const char *netName)
 {
     if (strlen(netName) < 1 || strlen(netName) > 20)
         return ERROR;
-    memset(&netName_, 0, strlen(netName));
     strcpy(netName_, netName);
     return SUCCESS;
 }
 
 String ZHNetwork::getNetName()
 {
-    return String(netName_);
+    return netName_;
 }
 
 error_code_t ZHNetwork::setStaSetting(const char *ssid, const char *password)
 {
     if (strlen(ssid) < 1 || strlen(ssid) > 32 || strlen(password) > 64)
         return ERROR;
-    memset(&staSsid_, 0, strlen(ssid));
     strcpy(staSsid_, ssid);
-    memset(&staPassword_, 0, strlen(password));
     strcpy(staPassword_, password);
     return SUCCESS;
 }
@@ -87,9 +84,7 @@ error_code_t ZHNetwork::setApSetting(const char *ssid, const char *password)
 {
     if (strlen(ssid) < 1 || strlen(ssid) > 32 || strlen(password) < 8 || strlen(password) > 64)
         return ERROR;
-    memset(&apSsid_, 0, strlen(ssid));
     strcpy(apSsid_, ssid);
-    memset(&apPassword_, 0, strlen(password));
     strcpy(apPassword_, password);
     return SUCCESS;
 }
@@ -193,7 +188,6 @@ void ZHNetwork::maintenance()
                     }
                 }
                 waiting_data_t waitingData;
-                esp_memset(&waitingData, 0, sizeof(waiting_data_t));
                 waitingData.time = millis();
                 memcpy(&waitingData.intermediateTargetMAC, &outgoingData.intermediateTargetMAC, 6);
                 memcpy(&waitingData.transmittedData, &outgoingData.transmittedData, sizeof(transmitted_data_t));
@@ -413,7 +407,6 @@ void ZHNetwork::maintenance()
             {
                 queueForRoutingVectorWaiting.pop();
                 outgoing_data_t outgoingData;
-                esp_memset(&outgoingData, 0, sizeof(outgoing_data_t));
                 memcpy(&outgoingData.transmittedData, &waitingData.transmittedData, sizeof(transmitted_data_t));
                 memcpy(&outgoingData.intermediateTargetMAC, &routingTable.intermediateTargetMAC, 6);
                 queueForOutgoingData.push(outgoingData);
@@ -601,7 +594,6 @@ void IRAM_ATTR ZHNetwork::onDataReceive(uint8_t *mac, uint8_t *data, uint8_t len
 void ZHNetwork::broadcastMessage(const char *data, const uint8_t *target, message_type_t type)
 {
     outgoing_data_t outgoingData;
-    esp_memset(&outgoingData, 0, sizeof(outgoing_data_t));
     outgoingData.transmittedData.messageType = type;
     outgoingData.transmittedData.messageID = ((uint16_t)random(32767) << 8) | (uint16_t)random(32767);
     memcpy(&outgoingData.transmittedData.netName, &netName_, 20);
@@ -636,7 +628,6 @@ void ZHNetwork::broadcastMessage(const char *data, const uint8_t *target, messag
 void ZHNetwork::unicastMessage(const char *data, const uint8_t *target, const uint8_t *sender, message_type_t type)
 {
     outgoing_data_t outgoingData;
-    esp_memset(&outgoingData, 0, sizeof(outgoing_data_t));
     outgoingData.transmittedData.messageType = type;
     outgoingData.transmittedData.messageID = ((uint16_t)random(32767) << 8) | (uint16_t)random(32767);
     memcpy(&outgoingData.transmittedData.netName, &netName_, 20);
