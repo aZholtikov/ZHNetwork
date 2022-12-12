@@ -120,6 +120,32 @@ public:
     uint16_t getMaxWaitingTimeForRoutingInfo(void);
 
 private:
+    static routing_vector_t routingVector;
+    static incoming_queue_t queueForIncomingData;
+    static outgoing_queue_t queueForOutgoingData;
+    static waiting_queue_t queueForRoutingVectorWaiting;
+
+    static bool criticalProcessSemaphore;
+    static bool sentMessageSemaphore;
+    static bool confirmReceivingSemaphore;
+    static bool confirmReceiving;
+    static uint8_t localMAC[6];
+    static uint16_t lastMessageID[10];
+    static char netName_[20];
+
+    const char *firmware{"1.11"};
+    const uint8_t broadcastMAC[6]{0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
+    work_mode_t workMode_{ESP_NOW};
+    char apSsid_[32]{"ESP-NOW NODE"};
+    char apPassword_[64]{0};
+    char staSsid_[32]{0};
+    char staPassword_[64]{0};
+    uint8_t maxNumberOfAttempts_{3};
+    uint8_t maxWaitingTimeBetweenTransmissions_{50};
+    uint8_t numberOfAttemptsToSend{1};
+    uint16_t maxTimeForRoutingInfoWaiting_{500};
+    uint64_t lastMessageSentTime{0};
+
 #if defined(ESP8266)
     static void onDataSent(uint8_t *mac, uint8_t status);
     static void onDataReceive(uint8_t *mac, uint8_t *data, uint8_t length);

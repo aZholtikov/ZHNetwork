@@ -1,31 +1,17 @@
 #include "ZHNetwork.h"
 
-routing_vector_t routingVector;
-incoming_queue_t queueForIncomingData;
-outgoing_queue_t queueForOutgoingData;
-waiting_queue_t queueForRoutingVectorWaiting;
+routing_vector_t ZHNetwork::routingVector;
+incoming_queue_t ZHNetwork::queueForIncomingData;
+outgoing_queue_t ZHNetwork::queueForOutgoingData;
+waiting_queue_t ZHNetwork::queueForRoutingVectorWaiting;
 
-const char *firmware PROGMEM{"1.1"};
-const uint8_t broadcastMAC[6]{0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
-
-bool criticalProcessSemaphore{false};
-bool sentMessageSemaphore{false};
-bool confirmReceivingSemaphore{false};
-bool confirmReceiving{false};
-uint8_t localMAC[6]{0};
-uint8_t numberOfAttemptsToSend{1};
-uint16_t lastMessageID[10]{0};
-uint64_t lastMessageSentTime{0};
-
-work_mode_t workMode_{ESP_NOW};
-char netName_[20]{0};
-char apSsid_[32]{"ESP-NOW NODE"};
-char apPassword_[64]{0};
-char staSsid_[32]{0};
-char staPassword_[64]{0};
-uint8_t maxNumberOfAttempts_{3};
-uint8_t maxWaitingTimeBetweenTransmissions_{50};
-uint16_t maxTimeForRoutingInfoWaiting_{500};
+bool ZHNetwork::criticalProcessSemaphore{false};
+bool ZHNetwork::sentMessageSemaphore{false};
+bool ZHNetwork::confirmReceivingSemaphore{false};
+bool ZHNetwork::confirmReceiving{false};
+char ZHNetwork::netName_[20]{0};
+uint8_t ZHNetwork::localMAC[6]{0};
+uint16_t ZHNetwork::lastMessageID[10]{0};
 
 ZHNetwork &ZHNetwork::setOnBroadcastReceivingCallback(on_message_t onBroadcastReceivingCallback)
 {
