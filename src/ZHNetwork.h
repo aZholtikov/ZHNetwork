@@ -133,7 +133,7 @@ private:
     static uint16_t lastMessageID[10];
     static char netName_[20];
 
-    const char *firmware{"1.11"};
+    const char *firmware{"1.12"};
     const uint8_t broadcastMAC[6]{0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
     work_mode_t workMode_{ESP_NOW};
     char apSsid_[32]{"ESP-NOW NODE"};

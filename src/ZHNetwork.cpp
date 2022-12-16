@@ -116,7 +116,7 @@ error_code_t ZHNetwork::begin()
     return SUCCESS;
 }
 
-error_code_t stop()
+error_code_t ZHNetwork::stop()
 {
     WiFi.mode(WIFI_OFF);
     esp_now_deinit();
