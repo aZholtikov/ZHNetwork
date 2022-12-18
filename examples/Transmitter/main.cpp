@@ -4,7 +4,7 @@ void onConfirmReceiving(const uint8_t *target, const bool status);
 
 ZHNetwork myNet;
 
-uint64_t messagelastTime{0};
+uint64_t messageLastTime{0};
 uint16_t messageTimerDelay{5000};
 const uint8_t target[6]{0xA8, 0x48, 0xFA, 0xDC, 0x5B, 0xFA};
 
@@ -38,7 +38,7 @@ void setup()
 
 void loop()
 {
-  if ((millis() - messagelastTime) > messageTimerDelay)
+  if ((millis() - messageLastTime) > messageTimerDelay)
   {
     Serial.println("Broadcast message sended.");
     myNet.sendBroadcastMessage("Hello world!");
@@ -50,7 +50,7 @@ void loop()
     Serial.print(myNet.macToString(target));
     Serial.println(" sended.");
     myNet.sendUnicastMessage("Hello world!", target, true);
-    messagelastTime = millis();
+    messageLastTime = millis();
   }
   myNet.maintenance();
 }
