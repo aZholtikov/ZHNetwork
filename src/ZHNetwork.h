@@ -144,7 +144,7 @@ private:
     uint8_t maxWaitingTimeBetweenTransmissions_{50};
     uint8_t numberOfAttemptsToSend{1};
     uint16_t maxTimeForRoutingInfoWaiting_{500};
-    uint64_t lastMessageSentTime{0};
+    uint32_t lastMessageSentTime{0};
 
 #if defined(ESP8266)
     static void onDataSent(uint8_t *mac, uint8_t status);
