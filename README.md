@@ -66,7 +66,7 @@ void onConfirmReceiving(const uint8_t *target, const bool status)
 * ESP_NOW_AP. ESP-NOW Mesh network + access point.
 * ESP_NOW_STA. ESP-NOW Mesh network + connect to your WiFi router.
 
-Attention! For correct work on ESP_NOW_STA mode at ESP8266 your WiFi router must be set on channel 1.
+Attention! For correct work on ESP_NOW_STA mode your WiFi router must be set on channel 1.
 
 ```cpp
 myNet.setWorkMode(ESP_NOW);
