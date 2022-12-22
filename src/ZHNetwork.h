@@ -52,13 +52,6 @@ typedef struct
 
 typedef enum
 {
-    ESP_NOW = 1,
-    ESP_NOW_AP,
-    ESP_NOW_STA
-} work_mode_t;
-
-typedef enum
-{
     BROADCAST = 1,
     UNICAST,
     UNICAST_WITH_CONFIRM,
@@ -87,17 +80,7 @@ public:
     ZHNetwork &setOnUnicastReceivingCallback(on_message_t onUnicastReceivingCallback);
     ZHNetwork &setOnConfirmReceivingCallback(on_confirm_t onConfirmReceivingCallback);
 
-    error_code_t setWorkMode(const work_mode_t workMode);
-    work_mode_t getWorkMode(void);
-
-    error_code_t setNetName(const char *netName);
-    String getNetName(void);
-
-    error_code_t setStaSetting(const char *ssid, const char *password);
-    error_code_t setApSetting(const char *ssid, const char *password);
-
-    error_code_t begin(void);
-    error_code_t stop(void);
+    error_code_t begin(const char *netName = "");
 
     void sendBroadcastMessage(const char *data);
     void sendUnicastMessage(const char *data, const uint8_t *target, const bool confirm = false);
@@ -105,7 +88,6 @@ public:
     void maintenance(void);
 
     String getNodeMac(void);
-    IPAddress getNodeIp(void);
     String getFirmwareVersion(void);
     String readErrorCode(error_code_t code); // Just for further development.
 
@@ -133,13 +115,8 @@ private:
     static uint16_t lastMessageID[10];
     static char netName_[20];
 
-    const char *firmware{"1.12"};
+    const char *firmware{"1.3"};
     const uint8_t broadcastMAC[6]{0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
-    work_mode_t workMode_{ESP_NOW};
-    char apSsid_[32]{"ESP-NOW NODE"};
-    char apPassword_[64]{0};
-    char staSsid_[32]{0};
-    char staPassword_[64]{0};
     uint8_t maxNumberOfAttempts_{3};
     uint8_t maxWaitingTimeBetweenTransmissions_{50};
     uint8_t numberOfAttemptsToSend{1};

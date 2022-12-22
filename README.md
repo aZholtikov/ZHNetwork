@@ -22,6 +22,11 @@ A simple library for creating ESP-NOW based Mesh network for ESP8266/ESP32.
 5. Voila. ;-)
 6. P.S. Uncomment #define PRINT_LOG in ZHNetwork.h for display to serial port the full operation log.
 
+## Notes
+
+1. Possibility uses WiFi AP or STA modes at the same time with ESP-NOW using the standard libraries.
+2. For correct work at ESP-NOW + STA mode your WiFi router must be set on channel 1.
+
 ## Function descriptions
 
 ### Sets the callback function for processing a received broadcast message
@@ -60,66 +65,14 @@ void onConfirmReceiving(const uint8_t *target, const bool status)
 }
 ```
 
-### Sets one of the three possibility operating modes
-
-* ESP_NOW. Default mode. ESP-NOW Mesh network only.
-* ESP_NOW_AP. ESP-NOW Mesh network + access point.
-* ESP_NOW_STA. ESP-NOW Mesh network + connect to your WiFi router.
-
-Attention! For correct work on ESP_NOW_STA mode your WiFi router must be set on channel 1.
-
-```cpp
-myNet.setWorkMode(ESP_NOW);
-```
-
-### Gets used operating mode
-
-```cpp
-myNet.getWorkMode();
-```
-
-### Sets ESP-NOW Mesh network name
+### ESP-NOW Mesh network initialization
 
 1-20 characters.
 
 Note. If network name not set node will work with all ESP-NOW networks. If set node will work with only one network.
 
 ```cpp
-myNet.setNetName("ZHNetwork");
-```
-
-### Gets used ESP-NOW Mesh network name
-
-```cpp
-myNet.getNetName();
-```
-
-### Sets WiFi ssid and password for ESP_NOW_STA mode
-
-Note. Must be called before Mesh network initialization.
-
-```cpp
-myNet.setStaSetting("SSID", "PASSWORD");
-```
-
-### Sets access point ssid and password for ESP_NOW_AP mode
-
-Note. Must be called before Mesh network initialization.
-
-```cpp
-myNet.setApSetting("SSID", "PASSWORD");
-```
-
-### ESP-NOW Mesh network initialization
-
-```cpp
-myNet.begin();
-```
-
-### ESP-NOW Mesh network deinitialization
-
-```cpp
-myNet.stop();
+myNet.begin("ZHNetwork");
 ```
 
 ### Sends broadcast message to all nodes
@@ -147,12 +100,6 @@ myNet.maintenance();
 
 ```cpp
 myNet.getNodeMac();
-```
-
-### Gets node IP address
-
-```cpp
-myNet.getNodeIp();
 ```
 
 ### Gets version of this library
@@ -235,27 +182,12 @@ void setup()
 {
   Serial.begin(115200);
   Serial.println();
-  // *** ESP-NOW mode only.
-  myNet.setWorkMode(ESP_NOW);
-  // *** Or ESP-NOW + access point mode.
-  // myNet.setWorkMode(ESP_NOW_AP);
-  // myNet.setApSetting("ESP NODE TEST", "12345678");
-  // *** Or ESP-NOW + connect to your router mode.
-  // myNet.setWorkMode(ESP_NOW_STA);
-  // myNet.setStaSetting("SSID", "PASSWORD");
-  // ***
-  myNet.setNetName("ZHNetwork");                   // Optional.
-  myNet.setMaxNumberOfAttempts(3);                 // Optional.
-  myNet.setMaxWaitingTimeBetweenTransmissions(50); // Optional.
-  myNet.setMaxWaitingTimeForRoutingInfo(500);      // Optional.
-  myNet.begin();
+  myNet.begin("ZHNetwork");
   myNet.setOnBroadcastReceivingCallback(onBroadcastReceiving);
   myNet.setOnUnicastReceivingCallback(onUnicastReceiving);
   myNet.setOnConfirmReceivingCallback(onConfirmReceiving);
   Serial.print("MAC: ");
   Serial.print(myNet.getNodeMac());
-  Serial.print(". IP: ");
-  Serial.print(myNet.getNodeIp());
   Serial.print(". Firmware version: ");
   Serial.print(myNet.getFirmwareVersion());
   Serial.println(".");

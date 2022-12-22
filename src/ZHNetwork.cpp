@@ -31,78 +31,15 @@ ZHNetwork &ZHNetwork::setOnConfirmReceivingCallback(on_confirm_t onConfirmReceiv
     return *this;
 }
 
-error_code_t ZHNetwork::setWorkMode(const work_mode_t workMode)
-{
-    if (workMode < ESP_NOW || workMode > ESP_NOW_STA)
-        return ERROR;
-    workMode_ = workMode;
-    return SUCCESS;
-}
-
-work_mode_t ZHNetwork::getWorkMode()
-{
-    return workMode_;
-}
-
-error_code_t ZHNetwork::setNetName(const char *netName)
-{
-    if (strlen(netName) < 1 || strlen(netName) > 20)
-        return ERROR;
-    strcpy(netName_, netName);
-    return SUCCESS;
-}
-
-String ZHNetwork::getNetName()
-{
-    return netName_;
-}
-
-error_code_t ZHNetwork::setStaSetting(const char *ssid, const char *password)
-{
-    if (strlen(ssid) < 1 || strlen(ssid) > 32 || strlen(password) > 64)
-        return ERROR;
-    strcpy(staSsid_, ssid);
-    strcpy(staPassword_, password);
-    return SUCCESS;
-}
-
-error_code_t ZHNetwork::setApSetting(const char *ssid, const char *password)
-{
-    if (strlen(ssid) < 1 || strlen(ssid) > 32 || strlen(password) < 8 || strlen(password) > 64)
-        return ERROR;
-    strcpy(apSsid_, ssid);
-    strcpy(apPassword_, password);
-    return SUCCESS;
-}
-
-error_code_t ZHNetwork::begin()
+error_code_t ZHNetwork::begin(const char *netName)
 {
     randomSeed(analogRead(0));
+    if (strlen(netName) > 1 && strlen(netName) < 20)
+        strcpy(netName_, netName);
 #ifdef PRINT_LOG
     Serial.begin(115200);
 #endif
-    switch (workMode_)
-    {
-    case ESP_NOW:
-        WiFi.mode(WIFI_STA);
-        break;
-    case ESP_NOW_AP:
-        WiFi.mode(WIFI_AP_STA);
-        WiFi.softAP(apSsid_, apPassword_);
-        break;
-    case ESP_NOW_STA:
-        WiFi.mode(WIFI_STA);
-        WiFi.begin(staSsid_, staPassword_);
-        while (WiFi.status() != WL_CONNECTED)
-        {
-            if (WiFi.status() == WL_NO_SSID_AVAIL || WiFi.status() == WL_CONNECT_FAILED)
-                return ERROR;
-            delay(500);
-        }
-        break;
-    default:
-        break;
-    }
+    WiFi.mode(WIFI_STA);
     esp_now_init();
 #if defined(ESP8266)
     wifi_get_macaddr(STATION_IF, localMAC);
@@ -113,15 +50,6 @@ error_code_t ZHNetwork::begin()
 #endif
     esp_now_register_send_cb(onDataSent);
     esp_now_register_recv_cb(onDataReceive);
-    return SUCCESS;
-}
-
-error_code_t ZHNetwork::stop()
-{
-    WiFi.mode(WIFI_OFF);
-    esp_now_deinit();
-    esp_now_unregister_recv_cb();
-    esp_now_unregister_send_cb();
     return SUCCESS;
 }
 
@@ -454,15 +382,6 @@ void ZHNetwork::maintenance()
 String ZHNetwork::getNodeMac()
 {
     return macToString(localMAC);
-}
-
-IPAddress ZHNetwork::getNodeIp()
-{
-    if (workMode_ == ESP_NOW_AP)
-        return WiFi.softAPIP();
-    if (workMode_ == ESP_NOW_STA)
-        return WiFi.localIP();
-    return IPAddress(0, 0, 0, 0);
 }
 
 String ZHNetwork::getFirmwareVersion()
