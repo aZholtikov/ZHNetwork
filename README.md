@@ -25,7 +25,7 @@ A simple library for creating ESP-NOW based Mesh network for ESP8266/ESP32.
 ## Notes
 
 1. Possibility uses WiFi AP or STA modes at the same time with ESP-NOW using the standard libraries.
-2. For correct work at ESP-NOW + STA mode your WiFi router must be set on channel 1.
+2. For correct work at ESP-NOW + STA mode your WiFi router must be set on channel 1 and set gateway mode.
 
 ## Function descriptions
 
@@ -73,6 +73,7 @@ Note. If network name not set node will work with all ESP-NOW networks. If set n
 
 ```cpp
 myNet.begin("ZHNetwork");
+myNet.begin("ZHNetwork", true); // Gateway mode.
 ```
 
 ### Sends broadcast message to all nodes

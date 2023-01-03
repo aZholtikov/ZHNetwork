@@ -31,7 +31,7 @@ ZHNetwork &ZHNetwork::setOnConfirmReceivingCallback(on_confirm_t onConfirmReceiv
     return *this;
 }
 
-error_code_t ZHNetwork::begin(const char *netName)
+error_code_t ZHNetwork::begin(const char *netName, const bool gateway)
 {
     randomSeed(analogRead(0));
     if (strlen(netName) > 1 && strlen(netName) < 20)
@@ -39,14 +39,14 @@ error_code_t ZHNetwork::begin(const char *netName)
 #ifdef PRINT_LOG
     Serial.begin(115200);
 #endif
-    WiFi.mode(WIFI_STA);
+    WiFi.mode(gateway ? WIFI_AP_STA : WIFI_STA);
     esp_now_init();
 #if defined(ESP8266)
-    wifi_get_macaddr(STATION_IF, localMAC);
+    wifi_get_macaddr(gateway ? SOFTAP_IF : STATION_IF, localMAC);
     esp_now_set_self_role(ESP_NOW_ROLE_COMBO);
 #endif
 #if defined(ESP32)
-    esp_wifi_get_mac((wifi_interface_t)ESP_IF_WIFI_STA, localMAC);
+    esp_wifi_get_mac(gateway ? (wifi_interface_t)ESP_IF_WIFI_AP : (wifi_interface_t)ESP_IF_WIFI_STA, localMAC);
 #endif
     esp_now_register_send_cb(onDataSent);
     esp_now_register_recv_cb(onDataReceive);

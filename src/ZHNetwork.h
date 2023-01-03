@@ -80,7 +80,7 @@ public:
     ZHNetwork &setOnUnicastReceivingCallback(on_message_t onUnicastReceivingCallback);
     ZHNetwork &setOnConfirmReceivingCallback(on_confirm_t onConfirmReceivingCallback);
 
-    error_code_t begin(const char *netName = "");
+    error_code_t begin(const char *netName = "", const bool gateway = false);
 
     void sendBroadcastMessage(const char *data);
     void sendUnicastMessage(const char *data, const uint8_t *target, const bool confirm = false);
@@ -115,7 +115,7 @@ private:
     static uint16_t lastMessageID[10];
     static char netName_[20];
 
-    const char *firmware{"1.3"};
+    const char *firmware{"1.31"};
     const uint8_t broadcastMAC[6]{0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
     uint8_t maxNumberOfAttempts_{3};
     uint8_t maxWaitingTimeBetweenTransmissions_{50};
