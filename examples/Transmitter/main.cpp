@@ -1,6 +1,6 @@
 #include "ZHNetwork.h"
 
-void onConfirmReceiving(const uint8_t *target, const bool status);
+void onConfirmReceiving(const uint8_t *target, const uint16_t id, const bool status);
 
 ZHNetwork myNet;
 
@@ -27,22 +27,28 @@ void loop()
   {
     Serial.println("Broadcast message sended.");
     myNet.sendBroadcastMessage("Hello world!");
+
     Serial.print("Unicast message to MAC ");
     Serial.print(myNet.macToString(target));
     Serial.println(" sended.");
     myNet.sendUnicastMessage("Hello world!", target);
+    
     Serial.print("Unicast with confirm message to MAC ");
     Serial.print(myNet.macToString(target));
+    Serial.print(" ID ");
+    Serial.print(myNet.sendUnicastMessage("Hello world!", target, true));
     Serial.println(" sended.");
-    myNet.sendUnicastMessage("Hello world!", target, true);
+
     messageLastTime = millis();
   }
   myNet.maintenance();
 }
 
-void onConfirmReceiving(const uint8_t *target, const bool status)
+void onConfirmReceiving(const uint8_t *target, const uint16_t id, const bool status)
 {
   Serial.print("Message to MAC ");
   Serial.print(myNet.macToString(target));
+  Serial.print(" ID ");
+  Serial.print(id);
   Serial.println(status ? " delivered." : " undelivered.");
 }

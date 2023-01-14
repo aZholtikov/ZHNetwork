@@ -59,7 +59,7 @@ Note. Called only at broadcast or unicast with confirm message. Status will alwa
 
 ```cpp
 myNet.setOnConfirmReceivingCallback(onConfirmReceiving);
-void onConfirmReceiving(const uint8_t *target, const bool status)
+void onConfirmReceiving(const uint8_t *target, const uint16_t id, const bool status)
 {
     // Do something when receiving a delivery/undelivery confirm message.
 }
@@ -78,11 +78,15 @@ myNet.begin("ZHNetwork", true); // Gateway mode.
 
 ### Sends broadcast message to all nodes
 
+Returns message ID.
+
 ```cpp
 myNet.sendBroadcastMessage("Hello world!");
 ```
 
 ### Sends unicast message to node
+
+Returns message ID.
 
 ```cpp
 myNet.sendUnicastMessage("Hello world!", target); // Without confirm.
@@ -171,7 +175,7 @@ myNet.getMaxWaitingTimeForRoutingInfo();
 
 void onBroadcastReceiving(const char *data, const uint8_t *sender);
 void onUnicastReceiving(const char *data, const uint8_t *sender);
-void onConfirmReceiving(const uint8_t *target, const bool status);
+void onConfirmReceiving(const uint8_t *target, const uint16_t id, const bool status);
 
 ZHNetwork myNet;
 
@@ -200,14 +204,18 @@ void loop()
   {
     Serial.println("Broadcast message sended.");
     myNet.sendBroadcastMessage("Hello world!");
+
     Serial.print("Unicast message to MAC ");
     Serial.print(myNet.macToString(target));
     Serial.println(" sended.");
     myNet.sendUnicastMessage("Hello world!", target);
+    
     Serial.print("Unicast with confirm message to MAC ");
     Serial.print(myNet.macToString(target));
+    Serial.print(" ID ");
+    Serial.print(myNet.sendUnicastMessage("Hello world!", target, true));
     Serial.println(" sended.");
-    myNet.sendUnicastMessage("Hello world!", target, true);
+
     messageLastTime = millis();
   }
   myNet.maintenance();
@@ -230,10 +238,12 @@ void onUnicastReceiving(const char *data, const uint8_t *sender)
   Serial.println(data);
 }
 
-void onConfirmReceiving(const uint8_t *target, const bool status)
+void onConfirmReceiving(const uint8_t *target, const uint16_t id, const bool status)
 {
   Serial.print("Message to MAC ");
   Serial.print(myNet.macToString(target));
+  Serial.print(" ID ");
+  Serial.print(id);
   Serial.println(status ? " delivered." : " undelivered.");
 }
 ```
