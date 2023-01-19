@@ -4,14 +4,15 @@ A simple library for creating ESP-NOW based Mesh network for ESP8266/ESP32.
 
 ## Features
 
-1. The maximum size of transmitted data is 200 bytes. Currently only unencrypted messages.
-2. All nodes are not visible to the network scanner.
-3. Not required a pre-pairings for data transfer.
-4. Broadcast or unicast data transmission.
-5. There are no periodic/synchronous messages on the network. All devices are in "silent mode" and do not "hum" into the air.
-6. Each node has its own independent routing table, updated only as needed.
-7. Each node will receive/send a message if it "sees" at least one device on the network.
-8. The number of devices on the network and the area of use is not limited (hypothetically). :-)
+1. The maximum size of transmitted data is 200 bytes.
+2. Encrypted and unencrypted messages. Simple XOR crypting.
+3. All nodes are not visible to the network scanner.
+4. Not required a pre-pairings for data transfer.
+5. Broadcast or unicast data transmissions.
+6. There are no periodic/synchronous messages on the network. All devices are in "silent mode" and do not "hum" into the air.
+7. Each node has its own independent routing table, updated only as needed.
+8. Each node will receive/send a message if it "sees" at least one device on the network.
+9. The number of devices on the network and the area of use is not limited (hypothetically). :-)
 
 ## Testing
 
@@ -126,6 +127,14 @@ uint8_t mac[6]
 myNet.stringToMac(string, mac);
 ```
 
+### Sets crypt key
+
+1-20 characters.
+
+```cpp
+myNet.setCryptKey("VERY_LONG_CRYPT_KEY"); 
+```
+
 ### Sets max number of attempts to send message
 
 1-10. 3 default value.
@@ -188,6 +197,7 @@ void setup()
   Serial.begin(115200);
   Serial.println();
   myNet.begin("ZHNetwork");
+  myNet.setCryptKey("VERY_LONG_CRYPT_KEY");
   myNet.setOnBroadcastReceivingCallback(onBroadcastReceiving);
   myNet.setOnUnicastReceivingCallback(onUnicastReceiving);
   myNet.setOnConfirmReceivingCallback(onConfirmReceiving);

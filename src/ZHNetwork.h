@@ -108,6 +108,7 @@ public:
     static String macToString(const uint8_t *mac);
     uint8_t *stringToMac(const String &string, uint8_t *mac);
 
+    error_code_t setCryptKey(const char *key = "");
     error_code_t setMaxNumberOfAttempts(const uint8_t maxNumberOfAttempts);
     uint8_t getMaxNumberOfAttempts(void);
     error_code_t setMaxWaitingTimeBetweenTransmissions(const uint8_t maxWaitingTimeBetweenTransmissions);
@@ -129,8 +130,9 @@ private:
     static uint8_t localMAC[6];
     static uint16_t lastMessageID[10];
     static char netName_[20];
+    static char key_[20];
 
-    const char *firmware{"1.32"};
+    const char *firmware{"1.4"};
     const uint8_t broadcastMAC[6]{0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
     uint8_t maxNumberOfAttempts_{3};
     uint8_t maxWaitingTimeBetweenTransmissions_{50};

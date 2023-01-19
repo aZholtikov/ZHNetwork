@@ -11,6 +11,7 @@ bool ZHNetwork::sentMessageSemaphore{false};
 bool ZHNetwork::confirmReceivingSemaphore{false};
 bool ZHNetwork::confirmReceiving{false};
 char ZHNetwork::netName_[20]{0};
+char ZHNetwork::key_[20]{0};
 uint8_t ZHNetwork::localMAC[6]{0};
 uint16_t ZHNetwork::lastMessageID[10]{0};
 
@@ -35,7 +36,7 @@ ZHNetwork &ZHNetwork::setOnConfirmReceivingCallback(on_confirm_t onConfirmReceiv
 error_code_t ZHNetwork::begin(const char *netName, const bool gateway)
 {
     randomSeed(analogRead(0));
-    if (strlen(netName) > 1 && strlen(netName) < 20)
+    if (strlen(netName) >= 1 && strlen(netName) <= 20)
         strcpy(netName_, netName);
 #ifdef PRINT_LOG
     Serial.begin(115200);
@@ -192,7 +193,12 @@ void ZHNetwork::maintenance()
             Serial.println(F(" received."));
 #endif
             if (onBroadcastReceivingCallback)
+            {
+                if (key_[0])
+                    for (uint8_t i{0}; i < strlen(incomingData.transmittedData.message); ++i)
+                        incomingData.transmittedData.message[i] = incomingData.transmittedData.message[i] ^ key_[i % strlen(key_)];
                 onBroadcastReceivingCallback(incomingData.transmittedData.message, incomingData.transmittedData.originalSenderMAC);
+            }
             forward = true;
             break;
         case UNICAST:
@@ -208,7 +214,12 @@ void ZHNetwork::maintenance()
             if (macToString(incomingData.transmittedData.originalTargetMAC) == macToString(localMAC))
             {
                 if (onUnicastReceivingCallback)
+                {
+                    if (key_[0])
+                        for (uint8_t i{0}; i < strlen(incomingData.transmittedData.message); ++i)
+                            incomingData.transmittedData.message[i] = incomingData.transmittedData.message[i] ^ key_[i % strlen(key_)];
                     onUnicastReceivingCallback(incomingData.transmittedData.message, incomingData.transmittedData.originalSenderMAC);
+                }
             }
             else
                 unicastMessage(incomingData.transmittedData.message, incomingData.transmittedData.originalTargetMAC, incomingData.transmittedData.originalSenderMAC, UNICAST);
@@ -226,7 +237,12 @@ void ZHNetwork::maintenance()
             if (macToString(incomingData.transmittedData.originalTargetMAC) == macToString(localMAC))
             {
                 if (onUnicastReceivingCallback)
+                {
+                    if (key_[0])
+                        for (uint8_t i{0}; i < strlen(incomingData.transmittedData.message); ++i)
+                            incomingData.transmittedData.message[i] = incomingData.transmittedData.message[i] ^ key_[i % strlen(key_)];
                     onUnicastReceivingCallback(incomingData.transmittedData.message, incomingData.transmittedData.originalSenderMAC);
+                }
                 confirmation_id_t id;
                 memcpy(&id.messageID, &incomingData.transmittedData.messageID, 2);
                 char temp[sizeof(transmitted_data_t::message)];
@@ -405,7 +421,7 @@ void ZHNetwork::maintenance()
         for (uint16_t i{0}; i < confirmationVector.size(); ++i)
         {
             confirmation_waiting_data_t confirmationData = confirmationVector[i];
-            if ((millis() - confirmationData.time) > 1000)
+            if ((millis() - confirmationData.time) > maxTimeForRoutingInfoWaiting_)
             {
                 confirmationVector.erase(confirmationVector.begin() + i);
                 broadcastMessage("", confirmationData.targetMAC, SEARCH_REQUEST);
@@ -446,6 +462,13 @@ uint8_t *ZHNetwork::stringToMac(const String &string, uint8_t *mac)
     for (uint32_t i = 0; i < 6; ++i)
         mac[i] = (pgm_read_byte(baseChars + string.charAt(i * 2) - '0') << 4) + pgm_read_byte(baseChars + string.charAt(i * 2 + 1) - '0');
     return mac;
+}
+
+error_code_t ZHNetwork::setCryptKey(const char *key)
+{
+    if (strlen(key) >= 1 && strlen(key) <= 20)
+        strcpy(key_, key);
+    return SUCCESS;
 }
 
 error_code_t ZHNetwork::setMaxNumberOfAttempts(const uint8_t maxNumberOfAttempts)
@@ -551,6 +574,9 @@ uint16_t ZHNetwork::broadcastMessage(const char *data, const uint8_t *target, me
     memcpy(&outgoingData.transmittedData.originalTargetMAC, target, 6);
     memcpy(&outgoingData.transmittedData.originalSenderMAC, &localMAC, 6);
     strcpy(outgoingData.transmittedData.message, data);
+    if (key_[0] && outgoingData.transmittedData.messageType == BROADCAST)
+        for (uint8_t i{0}; i < strlen(outgoingData.transmittedData.message); ++i)
+            outgoingData.transmittedData.message[i] = outgoingData.transmittedData.message[i] ^ key_[i % strlen(key_)];
     memcpy(&outgoingData.intermediateTargetMAC, &broadcastMAC, 6);
     queueForOutgoingData.push(outgoingData);
 #ifdef PRINT_LOG
@@ -586,6 +612,9 @@ uint16_t ZHNetwork::unicastMessage(const char *data, const uint8_t *target, cons
     memcpy(&outgoingData.transmittedData.originalTargetMAC, target, 6);
     memcpy(&outgoingData.transmittedData.originalSenderMAC, sender, 6);
     strcpy(outgoingData.transmittedData.message, data);
+    if (key_[0] && macToString(outgoingData.transmittedData.originalSenderMAC) == macToString(localMAC) && outgoingData.transmittedData.messageType != DELIVERY_CONFIRM_RESPONSE)
+        for (uint8_t i{0}; i < strlen(outgoingData.transmittedData.message); ++i)
+            outgoingData.transmittedData.message[i] = outgoingData.transmittedData.message[i] ^ key_[i % strlen(key_)];
     for (uint16_t i{0}; i < routingVector.size(); ++i)
     {
         routing_table_t routingTable = routingVector[i];

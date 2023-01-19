@@ -13,6 +13,7 @@ void setup()
   Serial.begin(115200);
   Serial.println();
   myNet.begin("ZHNetwork");
+  myNet.setCryptKey("VERY_LONG_CRYPT_KEY");
   myNet.setOnConfirmReceivingCallback(onConfirmReceiving);
   Serial.print("MAC: ");
   Serial.print(myNet.getNodeMac());

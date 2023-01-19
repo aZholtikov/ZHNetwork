@@ -10,6 +10,7 @@ void setup()
   Serial.begin(115200);
   Serial.println();
   myNet.begin("ZHNetwork");
+  myNet.setCryptKey("VERY_LONG_CRYPT_KEY");
   myNet.setOnBroadcastReceivingCallback(onBroadcastReceiving);
   myNet.setOnUnicastReceivingCallback(onUnicastReceiving);
   Serial.print("MAC: ");
