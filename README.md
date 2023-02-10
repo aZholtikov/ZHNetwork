@@ -257,3 +257,5 @@ void onConfirmReceiving(const uint8_t *target, const uint16_t id, const bool sta
   Serial.println(status ? " delivered." : " undelivered.");
 }
 ```
+
+Any feedback via [e-mail](mailto:github@zh.com.ru) would be appreciated. Or... [Buy me a coffee](https://paypal.me/aZholtikov).
