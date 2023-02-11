@@ -197,7 +197,7 @@ void setup()
   Serial.begin(115200);
   Serial.println();
   myNet.begin("ZHNetwork");
-  myNet.setCryptKey("VERY_LONG_CRYPT_KEY");
+  // myNet.setCryptKey("VERY_LONG_CRYPT_KEY"); // If encryption is used, the key must be set same of all another ESP-NOW devices in network.
   myNet.setOnBroadcastReceivingCallback(onBroadcastReceiving);
   myNet.setOnUnicastReceivingCallback(onUnicastReceiving);
   myNet.setOnConfirmReceivingCallback(onConfirmReceiving);
