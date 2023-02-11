@@ -33,6 +33,7 @@ void onBroadcastReceiving(const char *data, const uint8_t *sender)
   Serial.print("Message: ");
   Serial.println(data);
 }
+
 void onUnicastReceiving(const char *data, const uint8_t *sender)
 {
   Serial.print("Unicast message from MAC ");
