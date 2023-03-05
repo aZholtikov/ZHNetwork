@@ -35,7 +35,12 @@ ZHNetwork &ZHNetwork::setOnConfirmReceivingCallback(on_confirm_t onConfirmReceiv
 
 error_code_t ZHNetwork::begin(const char *netName, const bool gateway)
 {
-    randomSeed(analogRead(0));
+#if defined(ESP8266)
+    randomSeed(os_random());
+#endif
+#if defined(ESP32)
+    randomSeed(esp_random());
+#endif
     if (strlen(netName) >= 1 && strlen(netName) <= 20)
         strcpy(netName_, netName);
 #ifdef PRINT_LOG

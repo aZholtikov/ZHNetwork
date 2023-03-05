@@ -132,7 +132,7 @@ private:
     static char netName_[20];
     static char key_[20];
 
-    const char *firmware{"1.4"};
+    const char *firmware{"1.41"};
     const uint8_t broadcastMAC[6]{0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
     uint8_t maxNumberOfAttempts_{3};
     uint8_t maxWaitingTimeBetweenTransmissions_{50};
