@@ -2,6 +2,10 @@
 
 A simple library for creating ESP-NOW based Mesh network for ESP8266/ESP32.
 
+# ATTENTION!!!
+
+## The library is deprecated and is no longer supported. The new version can be viewed at https://github.com/aZholtikov/zh_network. Many bugs have been fixed, stability of work has been increased. Arduino version for ESP8266 most likely will not be ported - currently availability only version for RTOS SDK.
+
 ## Features
 
 1. The maximum size of transmitted data is 200 bytes.
